@@ -1,15 +1,14 @@
 --[[
     ============================================
-       PABLIN PANEL - SCRIPT UNICO COMPLETO
+       PABLIN PANEL v1.0 - SCRIPT UNICO
        Card de boas-vindas + Painel principal
        Tema: Preto e Vermelho
     ============================================
 ]]
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
@@ -35,7 +34,6 @@ local THEME = {
     ToggleOff     = Color3.fromRGB(50, 50, 50),
     Knob          = Color3.fromRGB(200, 200, 200),
     SliderBar     = Color3.fromRGB(40, 10, 10),
-    SearchBg      = Color3.fromRGB(25, 25, 25),
     Success       = Color3.fromRGB(80, 230, 130),
     SuccessBg     = Color3.fromRGB(30, 60, 20),
     SuccessBorder = Color3.fromRGB(80, 200, 110),
@@ -55,16 +53,6 @@ local function Tween(obj, props, t, style, dir)
     TweenService:Create(obj, TweenInfo.new(t, style, dir), props):Play()
 end
 
-local function Protect(gui)
-    local env = (getgenv and getgenv()) or _G
-    if env.HIDEUI then gui.Parent = env.HIDEUI
-    elseif gethui then gui.Parent = gethui()
-    elseif syn and syn.protect_gui then
-        syn.protect_gui(gui)
-        gui.Parent = game:GetService("CoreGui")
-    else gui.Parent = game:GetService("CoreGui") end
-end
-
 local function New(class, props, parent)
     local inst = Instance.new(class)
     for k, v in pairs(props) do
@@ -81,7 +69,6 @@ end
 
 local function Corner(p, r) local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, r or 8); c.Parent = p; return c end
 local function Stroke(p, c, t) local s = Instance.new("UIStroke"); s.Color = c or THEME.Border; s.Thickness = t or 1.2; s.Parent = p; return s end
-local function ListLayout(p, g) local l = Instance.new("UIListLayout"); l.SortOrder = Enum.SortOrder.LayoutOrder; l.Padding = UDim.new(0, g or 6); l.Parent = p; return l end
 
 local function CircleRipple(btn, mx, my)
     task.spawn(function()
@@ -105,22 +92,28 @@ local function CircleRipple(btn, mx, my)
 end
 
 -- ============================================
--- 1. CARD DE BOAS-VINDAS
+-- CARD DE BOAS-VINDAS
 -- ============================================
-local function ShowWelcome()
+local function ShowWelcomeCard(onLoad)
+    local supportInfo = {
+        { label = "Discord",  value = "discord.gg/pablin" },
+        { label = "Game",     value = (pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end) and game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name) or "Game" },
+        { label = "Version",  value = "v.1.0" },
+        { label = "Status",   value = "Free" },
+    }
+
     local SG = Instance.new("ScreenGui")
     SG.Name = "PablinWelcome"
     SG.ZIndexBehavior = Enum.ZIndexBehavior.Global
     SG.ResetOnSpawn = false
     SG.IgnoreGuiInset = true
-    Protect(SG)
+    SG.Parent = LocalPlayer.PlayerGui
 
     local Backdrop = New("Frame", {
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0),
-        ZIndex = 200,
-        Parent = SG,
+        ZIndex = 200, Parent = SG,
     })
 
     local W, H = 450, 310
@@ -130,10 +123,7 @@ local function ShowWelcome()
         Size = UDim2.new(0, W * 0.5, 0, H * 0.5),
         BackgroundColor3 = THEME.BgDeep,
         BackgroundTransparency = 0.80,
-        BorderSizePixel = 0,
-        ZIndex = 201,
-        ClipsDescendants = true,
-        Parent = SG,
+        ZIndex = 201, ClipsDescendants = true, Parent = SG,
         Children = {
             New("UICorner", { CornerRadius = UDim.new(0, 14) }),
             New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.38, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
@@ -143,7 +133,7 @@ local function ShowWelcome()
     New("Frame", { BackgroundColor3 = THEME.Accent, BackgroundTransparency = 0.88, Position = UDim2.new(0, -60, 0, -60), Size = UDim2.new(0, 220, 0, 220), ZIndex = 201, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) } })
     New("Frame", { BackgroundColor3 = THEME.AccentDeep, BackgroundTransparency = 0.90, Position = UDim2.new(1, -100, 1, -100), Size = UDim2.new(0, 180, 0, 180), ZIndex = 201, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) } })
 
-    local Header = New("Frame", { BackgroundColor3 = THEME.BgCard, Size = UDim2.new(1, 0, 0, 44), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 14) }), New("Frame", { BackgroundColor3 = THEME.BgCard, Position = UDim2.new(0, 0, 0.5, 0), Size = UDim2.new(1, 0, 0.5, 0), ZIndex = 202 }) } })
+    local Header = New("Frame", { BackgroundColor3 = THEME.BgCard, Size = UDim2.new(1, 0, 0, 44), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 14) }) } })
     New("ImageLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 13, 0.5, -8), Size = UDim2.new(0, 16, 0, 16), Image = "rbxassetid://7733992528", ImageColor3 = THEME.Accent, ZIndex = 203, Parent = Header })
     New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 35, 0, 0), Size = UDim2.new(1, -130, 1, 0), Font = Enum.Font.FredokaOne, Text = "Pablin Panel", TextColor3 = Color3.fromRGB(255, 220, 220), TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = Header })
     New("Frame", { AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = THEME.SuccessBg, BackgroundTransparency = 0.35, Position = UDim2.new(1, -40, 0.5, 0), Size = UDim2.new(0, 72, 0, 20), ZIndex = 203, Parent = Header, Children = { New("UICorner", { CornerRadius = UDim.new(0, 5) }), New("UIStroke", { Color = THEME.SuccessBorder, Transparency = 0.45, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }), New("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Font = Enum.Font.GothamBold, Text = "Free", TextColor3 = Color3.fromRGB(130, 235, 160), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 204 }) } })
@@ -159,15 +149,8 @@ local function ShowWelcome()
     local InfoBox = New("Frame", { BackgroundColor3 = THEME.BgCard, BackgroundTransparency = 0.20, Position = UDim2.new(0, 8, 0, 52), Size = UDim2.new(0, LW, 0, 112), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 8) }), New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.58, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) } })
     New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 9, 0, 5), Size = UDim2.new(1, -14, 0, 13), Font = Enum.Font.GothamBold, Text = "Information", TextColor3 = THEME.Accent, TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = InfoBox })
     New("Frame", { BackgroundColor3 = THEME.Accent, BackgroundTransparency = 0.72, Position = UDim2.new(0, 7, 0, 20), Size = UDim2.new(1, -14, 0, 1), ZIndex = 203, Parent = InfoBox, Children = { New("UIGradient", { Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1, 0), NumberSequenceKeypoint.new(0.9, 0), NumberSequenceKeypoint.new(1, 1)}) }) } })
-
-    local infos = {
-        {"Discord", "discord.gg/pablin"},
-        {"Game", (pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end) and game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name) or "Game"},
-        {"Version", "v.1.0"},
-        {"Status", "Free"},
-    }
     local lineY = 26
-    for _, info in ipairs(infos) do
+    for _, info in ipairs(supportInfo) do
         New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 9, 0, lineY), Size = UDim2.new(0, 55, 0, 12), Font = Enum.Font.GothamBold, Text = info[1] .. ":", TextColor3 = Color3.fromRGB(180, 120, 120), TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = InfoBox })
         New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 64, 0, lineY), Size = UDim2.new(1, -70, 0, 12), Font = Enum.Font.Gotham, Text = info[2], TextColor3 = Color3.fromRGB(220, 180, 180), TextSize = 9, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 203, Parent = InfoBox })
         lineY = lineY + 16
@@ -186,12 +169,16 @@ local function ShowWelcome()
         if ok and img then AvatarImg.Image = img end
     end)
 
-    New("Frame", { BackgroundColor3 = THEME.BgCard, BackgroundTransparency = 0.22, Position = UDim2.new(0, RX, 0, 52), Size = UDim2.new(0, RW, 0, 50), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 7) }), New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.52, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }), New("Frame", { BackgroundColor3 = THEME.Accent, Position = UDim2.new(0, 0, 0.5, -10), Size = UDim2.new(0, 3, 0, 20), ZIndex = 203, Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) } }) } })
-    New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(1, -16, 1, 0), Font = Enum.Font.Gotham, TextColor3 = Color3.fromRGB(255, 200, 200), TextSize = 10, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, ZIndex = 203, Text = "Welcome to Pablin Panel — Free.\nClick 'Load Panel' to open the main hub.", Parent = Card })
+    local NoticeBg = New("Frame", { BackgroundColor3 = THEME.BgCard, BackgroundTransparency = 0.22, Position = UDim2.new(0, RX, 0, 52), Size = UDim2.new(0, RW, 0, 50), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 7) }), New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.52, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }), New("Frame", { BackgroundColor3 = THEME.Accent, Position = UDim2.new(0, 0, 0.5, -10), Size = UDim2.new(0, 3, 0, 20), ZIndex = 203, Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) } }) } })
+    New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 12, 0, 0), Size = UDim2.new(1, -16, 1, 0), Font = Enum.Font.Gotham, TextColor3 = Color3.fromRGB(255, 200, 200), TextSize = 10, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, ZIndex = 203, Text = "Welcome to Pablin Panel — Free.\nClick 'Load Panel' to open the main hub.", Parent = NoticeBg })
 
-    New("Frame", { BackgroundColor3 = THEME.BgCard, BackgroundTransparency = 0.22, Position = UDim2.new(0, RX, 0, 110), Size = UDim2.new(0, RW, 0, 28), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 6) }), New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.60, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) } })
-    New("ImageLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0.5, -6), Size = UDim2.new(0, 12, 0, 12), Image = "rbxassetid://7733992528", ImageColor3 = THEME.Accent, ZIndex = 203, Parent = Card })
-    New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 25, 110, 0), Size = UDim2.new(1, -30, 28, 0), Font = Enum.Font.GothamBold, Text = "Status: Ready", TextColor3 = THEME.Success, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = Card })
+    local StatusBar = New("Frame", { BackgroundColor3 = THEME.BgCard, BackgroundTransparency = 0.22, Position = UDim2.new(0, RX, 0, 110), Size = UDim2.new(0, RW, 0, 28), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 6) }), New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.60, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) } })
+    New("ImageLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0.5, -6), Size = UDim2.new(0, 12, 0, 12), Image = "rbxassetid://7733992528", ImageColor3 = THEME.Accent, ZIndex = 203, Parent = StatusBar })
+    local StatusLabel = New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 25, 0, 0), Size = UDim2.new(1, -30, 1, 0), Font = Enum.Font.GothamBold, Text = "Status: Ready", TextColor3 = THEME.Success, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = StatusBar })
+
+    local InputBg = New("Frame", { BackgroundColor3 = THEME.BgInput, Position = UDim2.new(0, RX, 0, 146), Size = UDim2.new(0, RW, 0, 34), ZIndex = 202, Parent = Card, Children = { New("UICorner", { CornerRadius = UDim.new(0, 7) }), New("UIStroke", { Color = THEME.Accent, Transparency = 0.48, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) } })
+    New("ImageLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0.5, -7), Size = UDim2.new(0, 14, 0, 14), Image = "rbxassetid://7733992528", ImageColor3 = THEME.Accent, ZIndex = 203, Parent = InputBg })
+    New("TextLabel", { BackgroundTransparency = 1, Position = UDim2.new(0, 30, 0, 0), Size = UDim2.new(1, -38, 1, 0), Font = Enum.Font.GothamBold, Text = "User: " .. LocalPlayer.Name, TextColor3 = Color3.fromRGB(255, 200, 200), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 203, Parent = InputBg })
 
     local BtnY, BtnH, BtnGap = 202, 30, 6
     local BtnW = math.floor((RW - BtnGap * 2) / 3)
@@ -204,29 +191,28 @@ local function ShowWelcome()
         return btn
     end
 
-    -- BOTAO PRINCIPAL: LOAD PANEL
+    -- 🔴 BOTAO PRINCIPAL: CARREGA O PAINEL
     MakeBtn("Load Panel", RX, BtnW, Color3.fromRGB(60, 15, 20), Color3.fromRGB(255, 200, 200), function()
-        -- Fecha o card de boas-vindas
+        StatusLabel.Text = "Loading..."
+        StatusLabel.TextColor3 = THEME.Warning
+        task.wait(0.3)
+        StatusLabel.Text = "Loaded!"
+        StatusLabel.TextColor3 = THEME.Success
+        task.wait(0.4)
         Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
         Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
         task.delay(0.22, function() SG:Destroy() end)
-        -- ABRE O PAINEL PRINCIPAL
-        task.delay(0.3, function()
-            BuildMainPanel()
-        end)
+        -- ✅ CHAMA O PAINEL PRINCIPAL
+        task.delay(0.4, function() if onLoad then onLoad() end end)
     end)
 
     MakeBtn("Discord", RX + BtnW + BtnGap, BtnW, Color3.fromRGB(20, 35, 50), THEME.Cyan, function()
         pcall(function() (setclipboard or toclipboard)("https://discord.gg/pablin") end)
+        StatusLabel.Text = "Discord copied!"
+        StatusLabel.TextColor3 = THEME.Cyan
     end)
 
     MakeBtn("Close", RX + (BtnW + BtnGap) * 2, BtnW, Color3.fromRGB(40, 10, 15), THEME.AccentLight, function()
-        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
-        task.delay(0.22, function() SG:Destroy() end)
-    end)
-
-    CloseBtn.MouseButton1Click:Connect(function()
         Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
         Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
         task.delay(0.22, function() SG:Destroy() end)
@@ -237,62 +223,35 @@ local function ShowWelcome()
 end
 
 -- ============================================
--- 2. PAINEL PRINCIPAL (Pablin Panel)
+-- PAINEL PRINCIPAL
 -- ============================================
 local State = {
-    AutoFarmBone    = false,
-    AutoFarm        = false,
-    AutoQuest       = false,
-    AutoTakeQuest   = false,
-    AutoCast        = false,
-    AutoKatakuri    = false,
-    AutoDoughKing   = false,
-    IgnoreKatakuri  = false,
-    RandomSurprise  = false,
-    AutoFarmBoss    = false,
-    GetBossQuest    = false,
-    StartChestFarm  = false,
-    StopIfItems     = false,
-    AutoFruit       = false,
-    AutoMaterial    = false,
-    AutoEvent       = false,
-    AutoRespawn     = true,
-    SelectedBoss     = nil,
-    SelectedFruit    = nil,
-    SelectedMaterial = nil,
-    SelectedEvent    = nil,
-    SelectedMethod   = "Click",
-    SelectedWeapon   = "Melee",
-    FarmDistance = 50,
-    AttackSpeed  = 1,
-    WalkSpeed    = 16,
+    AutoFarmBone = false, AutoFarm = false, AutoQuest = false, AutoTakeQuest = false,
+    AutoCast = false, AutoKatakuri = false, AutoDoughKing = false, IgnoreKatakuri = false,
+    RandomSurprise = false, AutoFarmBoss = false, GetBossQuest = false,
+    StartChestFarm = false, StopIfItems = false, AutoFruit = false,
+    AutoMaterial = false, AutoEvent = false, AutoRespawn = true,
+    SelectedBoss = nil, SelectedFruit = nil, SelectedMaterial = nil,
+    SelectedEvent = nil, SelectedMethod = "Click", SelectedWeapon = "Melee",
+    FarmDistance = 50, AttackSpeed = 1, WalkSpeed = 16,
 }
 
--- Tabela de Farms
 local FarmTable = {
-    {1,    9,    "Bandit"},              {10,   14,   "Galley Pirate"},
-    {15,   29,   "Monkey"},              {30,   39,   "Gorilla"},
-    {40,   59,   "Brute"},               {60,   89,   "Desert Bandit"},
-    {90,   119,  "Snow Bandit"},         {120,  189,  "Chief Petty Officer"},
-    {190,  299,  "Prisoner"},            {300,  374,  "Military Soldier"},
-    {375,  474,  "Fishman Warrior"},     {475,  524,  "God's Guard"},
-    {525,  624,  "Royal Squad"},         {625,  725,  "Galley Pirate"},
-    {726,  774,  "Mercenary"},           {775,  924,  "Swan Pirate"},
-    {925,  999,  "Zombie"},              {1000, 1149, "Snow Trooper"},
-    {1150, 1249, "Lab Subordinate"},     {1250, 1299, "Ship Deckhand"},
-    {1300, 1349, "Ship Steward"},        {1350, 1424, "Arctic Warrior"},
-    {1425, 1499, "Sea Soldier"},         {1500, 1549, "Pirate Millionaire"},
-    {1550, 1674, "Stone"},               {1675, 1749, "Hydra Leader"},
-    {1750, 2024, "Kilo Admiral"},        {2025, 2074, "Demonic Soul"},
-    {2075, 2199, "Peanut Scout"},        {2200, 2299, "Cookie Crafter"},
-    {2300, 2399, "Cocoa Warrior"},       {2400, 2524, "Candy Pirate"},
-    {2525, 2599, "Isle Champion"},       {2600, 2624, "Reef Bandit"},
-    {2625, 2649, "Coral Pirate"},        {2650, 2674, "Sea Chanter"},
-    {2675, 2699, "Ocean Prophet"},       {2700, 2724, "High Disciple"},
-    {2725, 2800, "Grand Devotee"},
+    {1,9,"Bandit"},{10,14,"Galley Pirate"},{15,29,"Monkey"},{30,39,"Gorilla"},
+    {40,59,"Brute"},{60,89,"Desert Bandit"},{90,119,"Snow Bandit"},{120,189,"Chief Petty Officer"},
+    {190,299,"Prisoner"},{300,374,"Military Soldier"},{375,474,"Fishman Warrior"},
+    {475,524,"God's Guard"},{525,624,"Royal Squad"},{625,725,"Galley Pirate"},
+    {726,774,"Mercenary"},{775,924,"Swan Pirate"},{925,999,"Zombie"},
+    {1000,1149,"Snow Trooper"},{1150,1249,"Lab Subordinate"},{1250,1299,"Ship Deckhand"},
+    {1300,1349,"Ship Steward"},{1350,1424,"Arctic Warrior"},{1425,1499,"Sea Soldier"},
+    {1500,1549,"Pirate Millionaire"},{1550,1674,"Stone"},{1675,1749,"Hydra Leader"},
+    {1750,2024,"Kilo Admiral"},{2025,2074,"Demonic Soul"},{2075,2199,"Peanut Scout"},
+    {2200,2299,"Cookie Crafter"},{2300,2399,"Cocoa Warrior"},{2400,2524,"Candy Pirate"},
+    {2525,2599,"Isle Champion"},{2600,2624,"Reef Bandit"},{2625,2649,"Coral Pirate"},
+    {2650,2674,"Sea Chanter"},{2675,2699,"Ocean Prophet"},{2700,2724,"High Disciple"},
+    {2725,2800,"Grand Devotee"},
 }
 
--- Game functions
 local function GetChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
 local function GetHum() local c = GetChar(); return c and c:FindFirstChildOfClass("Humanoid") end
 local function GetRoot() local c = GetChar(); return c and c:FindFirstChild("HumanoidRootPart") end
@@ -337,19 +296,14 @@ local function GetLevel()
     local lvl = 1
     pcall(function()
         local ls = LocalPlayer:FindFirstChild("leaderstats")
-        if ls then
-            local v = ls:FindFirstChild("Level") or ls:FindFirstChild("Lvl")
-            if v then lvl = v.Value end
-        end
+        if ls then local v = ls:FindFirstChild("Level") or ls:FindFirstChild("Lvl"); if v then lvl = v.Value end end
     end)
     return lvl
 end
 
 local function GetCurrentFarm()
     local lvl = GetLevel()
-    for _, d in ipairs(FarmTable) do
-        if lvl >= d[1] and lvl <= d[2] then return d end
-    end
+    for _, d in ipairs(FarmTable) do if lvl >= d[1] and lvl <= d[2] then return d end end
     return FarmTable[#FarmTable]
 end
 
@@ -364,10 +318,7 @@ local function StartAutoFarm()
             if npc and hrp then
                 Teleport(hrp.CFrame * CFrame.new(0,0,6))
                 LookAt(hrp)
-                for i=1,8 do
-                    if not State.AutoFarm then break end
-                    Click(); task.wait(0.12)
-                end
+                for i=1,8 do if not State.AutoFarm then break end; Click(); task.wait(0.12) end
             else task.wait(1) end
             task.wait(0.3)
         end
@@ -399,12 +350,7 @@ end
 local function StartAutoCast()
     if Threads.Cast then return end
     Threads.Cast = task.spawn(function()
-        while State.AutoCast do
-            PressKey(Enum.KeyCode.E); task.wait(0.4)
-            PressKey(Enum.KeyCode.Q); task.wait(0.4)
-            PressKey(Enum.KeyCode.F); task.wait(0.4)
-            PressKey(Enum.KeyCode.Z); task.wait(2)
-        end
+        while State.AutoCast do PressKey(Enum.KeyCode.E); task.wait(0.4); PressKey(Enum.KeyCode.Q); task.wait(0.4); PressKey(Enum.KeyCode.F); task.wait(0.4); PressKey(Enum.KeyCode.Z); task.wait(2) end
         Threads.Cast = nil
     end)
 end
@@ -433,10 +379,7 @@ local function StartAutoBoss()
             if npc and hrp then
                 Teleport(hrp.CFrame * CFrame.new(0,0,8))
                 LookAt(hrp)
-                for i=1,8 do
-                    if not State.AutoFarmBoss then break end
-                    Click(); task.wait(0.12)
-                end
+                for i=1,8 do if not State.AutoFarmBoss then break end; Click(); task.wait(0.12) end
             else task.wait(1) end
             task.wait(0.3)
         end
@@ -474,10 +417,7 @@ local function StartAutoKatakuri()
                 if npc and hrp then
                     Teleport(hrp.CFrame * CFrame.new(0,0,8))
                     LookAt(hrp)
-                    for i=1,8 do
-                        if not State.AutoKatakuri then break end
-                        Click(); task.wait(0.12)
-                    end
+                    for i=1,8 do if not State.AutoKatakuri then break end; Click(); task.wait(0.12) end
                 end
             end
             task.wait(0.5)
@@ -494,10 +434,7 @@ local function StartAutoDoughKing()
             if npc and hrp then
                 Teleport(hrp.CFrame * CFrame.new(0,0,8))
                 LookAt(hrp)
-                for i=1,8 do
-                    if not State.AutoDoughKing then break end
-                    Click(); task.wait(0.12)
-                end
+                for i=1,8 do if not State.AutoDoughKing then break end; Click(); task.wait(0.12) end
             end
             task.wait(0.5)
         end
@@ -524,8 +461,7 @@ local function HandleToggle(key, value)
     if key == "AutoFarm" then if value then StartAutoFarm() else Threads.Farm = nil end
     elseif key == "AutoFarmBone" then if value then StartAutoFarmBone() else Threads.Bone = nil end
     elseif key == "AutoCast" then if value then StartAutoCast() else Threads.Cast = nil end
-    elseif key == "AutoQuest" or key == "AutoTakeQuest" or key == "GetBossQuest" then
-        if value then StartAutoQuest() else Threads.Quest = nil end
+    elseif key == "AutoQuest" or key == "AutoTakeQuest" or key == "GetBossQuest" then if value then StartAutoQuest() else Threads.Quest = nil end
     elseif key == "AutoFarmBoss" then if value then StartAutoBoss() else Threads.Boss = nil end
     elseif key == "AutoKatakuri" then if value then StartAutoKatakuri() else Threads.Kat = nil end
     elseif key == "AutoDoughKing" then if value then StartAutoDoughKing() else Threads.DK = nil end
@@ -535,15 +471,10 @@ local function HandleToggle(key, value)
 end
 
 RunService.Heartbeat:Connect(function()
-    if State.WalkSpeed and State.WalkSpeed > 0 then
-        local hum = GetHum()
-        if hum then hum.WalkSpeed = State.WalkSpeed end
-    end
+    if State.WalkSpeed and State.WalkSpeed > 0 then local hum = GetHum(); if hum then hum.WalkSpeed = State.WalkSpeed end end
 end)
 
--- ============================================
--- COMPONENTES UI
--- ============================================
+-- Componentes UI
 local function CreateToggle(parent, label, key, layoutOrder)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, 0, 0, 42)
@@ -593,11 +524,7 @@ local function CreateToggle(parent, label, key, layoutOrder)
     btn.Text = ""
     btn.ZIndex = 5
     btn.Parent = row
-    btn.MouseButton1Click:Connect(function()
-        State[key] = not State[key]
-        update()
-        HandleToggle(key, State[key])
-    end)
+    btn.MouseButton1Click:Connect(function() State[key] = not State[key]; update(); HandleToggle(key, State[key]) end)
     update()
     return row
 end
@@ -748,7 +675,7 @@ local function CreateSelect(parent, label, options, key, layoutOrder)
     drop.CanvasSize = UDim2.new(0, 0, 0, #options * 24)
     drop.Parent = container
     Corner(drop, 4); Stroke(drop, THEME.Border, 1)
-    ListLayout(drop, 0)
+    local ll = Instance.new("UIListLayout"); ll.Padding = UDim.new(0, 0); ll.Parent = drop
     for _, opt in ipairs(options) do
         local o = Instance.new("TextButton")
         o.Size = UDim2.new(1, 0, 0, 24)
@@ -778,7 +705,7 @@ end
 -- ============================================
 -- CONSTRUIR PAINEL PRINCIPAL
 -- ============================================
-function BuildMainPanel()
+local function BuildMainPanel()
     local old = LocalPlayer.PlayerGui:FindFirstChild("PablinPanelGUI")
     if old then old:Destroy() end
 
@@ -853,14 +780,7 @@ function BuildMainPanel()
     closeBtn.Parent = titleBar
     Corner(closeBtn, 6); Stroke(closeBtn, THEME.AccentLight, 1)
 
-    -- Tabs
-    local tabNames = {
-        {name = "Home",      icon = "🏠"},
-        {name = "Sub Farm",  icon = "⚔"},
-        {name = "Sea Event", icon = "☠"},
-        {name = "Player",    icon = "👥"},
-        {name = "Settings",  icon = "⚙"},
-    }
+    local tabNames = {{name="Home",icon="🏠"},{name="Sub Farm",icon="⚔"},{name="Sea Event",icon="☠"},{name="Player",icon="👥"},{name="Settings",icon="⚙"}}
     local tabBtns = {}
     for i, data in ipairs(tabNames) do
         local b = Instance.new("TextButton")
@@ -906,20 +826,14 @@ function BuildMainPanel()
         left.Size = UDim2.new(0.485, 0, 1, 0)
         left.BackgroundTransparency = 1
         left.Parent = page
-        local ll = Instance.new("UIListLayout")
-        ll.SortOrder = Enum.SortOrder.LayoutOrder
-        ll.Padding = UDim.new(0, 8)
-        ll.Parent = left
+        local ll = Instance.new("UIListLayout"); ll.SortOrder = Enum.SortOrder.LayoutOrder; ll.Padding = UDim.new(0, 8); ll.Parent = left
         Instance.new("UIPadding", {PaddingTop = UDim.new(0, 4)}).Parent = left
         local right = Instance.new("Frame")
         right.Size = UDim2.new(0.485, 0, 1, 0)
         right.Position = UDim2.new(0.515, 0, 0, 0)
         right.BackgroundTransparency = 1
         right.Parent = page
-        local rl = Instance.new("UIListLayout")
-        rl.SortOrder = Enum.SortOrder.LayoutOrder
-        rl.Padding = UDim.new(0, 8)
-        rl.Parent = right
+        local rl = Instance.new("UIListLayout"); rl.SortOrder = Enum.SortOrder.LayoutOrder; rl.Padding = UDim.new(0, 8); rl.Parent = right
         Instance.new("UIPadding", {PaddingTop = UDim.new(0, 4)}).Parent = right
         return left, right
     end
@@ -948,7 +862,6 @@ function BuildMainPanel()
         end)
     end
 
-    -- HOME
     local homeL, homeR = TwoCol(pages[1])
     SectionTitle(homeL, "My Farm", 0)
     local o = 1
@@ -969,17 +882,14 @@ function BuildMainPanel()
     CreateSelect(homeR, "Weapon",      {"Melee", "Sword", "Gun", "Fruit"}, "SelectedWeapon", o2); o2 += 1
     CreateToggle(homeR, "Auto Respawn", "AutoRespawn", o2)
 
-    -- SUB FARM
     local subL, subR = TwoCol(pages[2])
     SectionTitle(subL, "Sub Farm Options", 0)
-    local o3 = 1
-    CreateToggle(subL, "Auto Material Farm", "AutoMaterial", o3)
+    CreateToggle(subL, "Auto Material Farm", "AutoMaterial", 1)
     CreateSelect(subL, "Select Material", {"Bones", "Scrap Metal", "Leather", "Demonic Wisp"}, "SelectedMaterial", 2)
     SectionTitle(subR, "Sub Settings", 0)
     CreateSlider(subR, "Material Speed", "AttackSpeed", 1, 10, 1)
     CreateToggle(subR, "Stop on Full", "StopIfItems", 2)
 
-    -- SEA EVENT
     local evL, evR = TwoCol(pages[3])
     SectionTitle(evL, "Sea Events & Bosses", 0)
     local o4 = 1
@@ -991,18 +901,16 @@ function BuildMainPanel()
     CreateToggle(evR, "Random Surprise", "RandomSurprise", 2)
     CreateSelect(evR, "Fruit Rarity", {"Common", "Rare", "Legendary", "Mythical"}, "SelectedFruit", 3)
 
-    -- PLAYER
     local plL, plR = TwoCol(pages[4])
     SectionTitle(plL, "Player Stats", 0)
     local o5 = 1
-    CreateSlider(plL, "Walk Speed", "WalkSpeed",    16, 200, o5); o5 += 1
+    CreateSlider(plL, "Walk Speed", "WalkSpeed", 16, 200, o5); o5 += 1
     CreateSlider(plL, "Jump Power", "FarmDistance", 50, 200, o5)
     CreateToggle(plL, "Auto Respawn", "AutoRespawn", 3)
     SectionTitle(plR, "Player Options", 0)
     CreateToggle(plR, "Auto Chest Farm", "StartChestFarm", 1)
     CreateToggle(plR, "Stop If Items",   "StopIfItems",    2)
 
-    -- SETTINGS
     local stL, stR = TwoCol(pages[5])
     SectionTitle(stL, "System Settings", 0)
     local o6 = 1
@@ -1013,18 +921,13 @@ function BuildMainPanel()
     CreateToggle(stR, "Auto Respawn",    "AutoRespawn",    1)
     CreateToggle(stR, "Ignore Katakuri", "IgnoreKatakuri", 2)
 
-    -- Controles
     open.MouseButton1Click:Connect(function() main.Visible = not main.Visible; open.Visible = not main.Visible end)
     closeBtn.MouseButton1Click:Connect(function() main.Visible = false; open.Visible = true end)
     minBtn.MouseButton1Click:Connect(function()
-        if main.Size.Y.Offset > 100 then
-            TweenService:Create(main, TweenInfo.new(0.25), {Size = UDim2.new(0, 720, 0, 50)}):Play()
-        else
-            TweenService:Create(main, TweenInfo.new(0.25), {Size = UDim2.new(0, 720, 0, 560)}):Play()
-        end
+        if main.Size.Y.Offset > 100 then TweenService:Create(main, TweenInfo.new(0.25), {Size = UDim2.new(0, 720, 0, 50)}):Play()
+        else TweenService:Create(main, TweenInfo.new(0.25), {Size = UDim2.new(0, 720, 0, 560)}):Play() end
     end)
 
-    -- Arrastar
     do
         local dragging, dragInput, dragStart, startPos
         titleBar.InputBegan:Connect(function(input)
@@ -1032,14 +935,10 @@ function BuildMainPanel()
                 dragging = true
                 dragStart = input.Position
                 startPos = main.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
-                end)
+                input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
             end
         end)
-        titleBar.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-        end)
+        titleBar.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
         UserInputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
                 local delta = input.Position - dragStart
@@ -1050,6 +949,6 @@ function BuildMainPanel()
 end
 
 -- ============================================
--- INICIA O PAINEL
+-- INICIA
 -- ============================================
-ShowWelcome()
+ShowWelcomeCard(BuildMainPanel)
