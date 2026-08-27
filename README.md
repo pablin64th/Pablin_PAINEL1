@@ -1,80 +1,46 @@
 --[[
     ============================================
-       PABLIN PANEL v1.0 - CUSTOMIZADO
-       Estilo: Quantum Onyx Hub (vermelho/preto)
-       Todas as opcoes/funcoes preservadas
+       PABLIN PANEL v1.0 - SEM KEY SYSTEM
+       Visual: Preto e Vermelho
+       Estilo: Quantum Onyx (customizado)
+       Carregamento direto, sem autenticacao
     ============================================
 ]]
 
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 -- ============================================
--- 1. CONFIGURACOES
--- ============================================
-local DIRECTORY = "https://raw.githubusercontent.com/flazhy/QuantumOnyx/refs/heads/main/Games"
-local API = "https://api.luarmor.net/files/v4/loaders"
-local SCRIPT_ID = "0ae9fe4cf963e3a13d25eed0e2ce5940"
-local FOLDER = "Pablin Panel"
-local KEY_FILE = FOLDER .. "/Key.json"
-local gameId = game.GameId
-
-local Scripts = {
-    Free = {
-        [994732206]  = DIRECTORY .. "/BloxFruits.lua",
-        [9186719164] = DIRECTORY .. "/SailorPiece.lua",
-        [8191429227] = DIRECTORY .. "/CutTrees.lua",
-    },
-    Premium = {
-        [994732206]   = API .. "/0ae9fe4cf963e3a13d25eed0e2ce5940.lua",
-        [10004244222] = API .. "/63980a492928552d074ceee243a918d6.lua",
-        [9792947201]  = API .. "/50e8e00251d97215e14313c0bb012058.lua",
-        [10200395747] = API .. "/65265b2869c03f57430ee45357d8c3f9.lua"
-    }
-}
-
--- ============================================
--- 2. TEMA (PRETO E VERMELHO)
+-- 1. TEMA (PRETO E VERMELHO)
 -- ============================================
 local THEME = {
-    -- Cores principais
-    BgDeep        = Color3.fromRGB(6, 3, 12),      -- fundo do card
-    BgCard        = Color3.fromRGB(9, 5, 18),       -- caixas
-    BgInput       = Color3.fromRGB(4, 2, 9),        -- inputs
-    
-    -- VERMELHOS (substituindo os roxos)
-    Accent        = Color3.fromRGB(220, 40, 40),    -- vermelho principal
-    AccentDark    = Color3.fromRGB(140, 25, 25),    -- vermelho escuro
-    AccentLight   = Color3.fromRGB(255, 70, 70),    -- vermelho claro
-    AccentSoft    = Color3.fromRGB(180, 30, 30),    -- bordas
-    AccentDeep    = Color3.fromRGB(80, 15, 15),     -- gradiente escuro
-    
-    -- Cores de status (mantidas)
+    BgDeep        = Color3.fromRGB(6, 3, 12),
+    BgCard        = Color3.fromRGB(9, 5, 18),
+    BgInput       = Color3.fromRGB(4, 2, 9),
+    Accent        = Color3.fromRGB(220, 40, 40),
+    AccentDark    = Color3.fromRGB(140, 25, 25),
+    AccentLight   = Color3.fromRGB(255, 70, 70),
+    AccentSoft    = Color3.fromRGB(180, 30, 30),
+    AccentDeep    = Color3.fromRGB(80, 15, 15),
     Success       = Color3.fromRGB(80, 230, 130),
     SuccessBg     = Color3.fromRGB(30, 60, 20),
     SuccessBorder = Color3.fromRGB(80, 200, 110),
     Warning       = Color3.fromRGB(255, 200, 80),
     Error         = Color3.fromRGB(255, 90, 110),
-    
-    -- Cores de texto
     TextMain      = Color3.fromRGB(240, 230, 235),
     TextDim       = Color3.fromRGB(180, 140, 140),
     TextMuted     = Color3.fromRGB(120, 100, 120),
     TextLabel     = Color3.fromRGB(200, 175, 180),
-    
-    -- Outras
     AvatarBg      = Color3.fromRGB(20, 10, 12),
     Cyan          = Color3.fromRGB(105, 175, 255),
     Gold          = Color3.fromRGB(200, 170, 65),
 }
 
 -- ============================================
--- 3. UTILITARIOS
+-- 2. UTILITARIOS
 -- ============================================
 local function Tween(obj, props, t, style, dir)
     style = style or Enum.EasingStyle.Quint
@@ -135,94 +101,19 @@ local function CircleRipple(btn, mx, my)
     end)
 end
 
-local function Notify(title, desc, accent, duration)
-    pcall(function()
-        StarterGui:SetCore("SendNotification", {
-            Title = title or "Pablin Panel",
-            Text = desc or "",
-            Duration = duration or 5,
-        })
-    end)
-end
-
-local function ToTime(expire)
-    if not expire or expire <= 0 then return "Lifetime" end
-    local left = expire - os.time()
-    if left < 0 then return "Expired" end
-    local days = math.floor(left / 86400)
-    local hours = math.floor((left % 86400) / 3600)
-    local mins = math.floor((left % 3600) / 60)
-    if days > 0 then return string.format("%dd %dh", days, hours) end
-    if hours > 0 then return string.format("%dh %dm", hours, mins) end
-    return string.format("%dm", mins)
-end
-
 -- ============================================
--- 4. FUNCOES DE KEY (mantidas iguais)
+-- 3. CONSTRUIR O PAINEL
 -- ============================================
-local function SaveKey(key)
-    if not isfolder(FOLDER) then makefolder(FOLDER) end
-    pcall(writefile, KEY_FILE, HttpService:JSONEncode({ key = key }))
-end
-
-local function LoadSavedKey()
-    if isfolder(FOLDER) and isfile(KEY_FILE) then
-        local ok, v = pcall(function() return HttpService:JSONDecode(readfile(KEY_FILE)) end)
-        if ok and type(v) == "table" and v.key then return v.key end
-    end
-    return ""
-end
-
-local function ClearKey()
-    if not isfolder(FOLDER) then makefolder(FOLDER) end
-    pcall(writefile, KEY_FILE, HttpService:JSONEncode({}))
-end
-
-local function apply_script_key(key)
-    getgenv().script_key = key
-    getgenv().key = key
-    if type(_G) == "table" then _G.script_key = key end
-    if type(shared) == "table" then shared.script_key = key end
-    pcall(function()
-        if type(getrenv) == "function" then
-            local env = getrenv()
-            if type(env) == "table" then env.script_key = key end
-        end
-    end)
-end
-
-local function LoadScript(tier, key)
-    local tbl = Scripts[tier]
-    if not tbl then return end
-    local url = tbl[gameId]
-    if not url then
-        warn("[Pablin Panel] No " .. tier .. " script for GameId: " .. tostring(gameId))
-        return
-    end
-    if tier == "Premium" and key then
-        apply_script_key(key)
-    end
-    local ok, err = pcall(function() loadstring(game:HttpGet(url))() end)
-    if not ok then warn("[Pablin Panel] Error: " .. tostring(err)) end
-end
-
--- ============================================
--- 5. INTERFACE PRINCIPAL
--- ============================================
-local function ShowKeyUI()
-    local done = false
-    local isPremium = false
-    local resultKey = ""
-    local submitting = false
-
+local function BuildPanel()
     local supportInfo = {
-        { label = "Discord", value = "discord.gg/pablin" },
-        { label = "Game",   value = (pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end) and game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name) or "Unknown" },
-        { label = "Version",value = "v.1.0" },
+        { label = "Discord",  value = "discord.gg/pablin" },
+        { label = "Game",     value = (pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end) and game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name) or "Unknown" },
+        { label = "Version",  value = "v.1.0" },
+        { label = "Status",   value = "Free" },
     }
 
     local SG = Instance.new("ScreenGui")
-    SG.Name = "PP_" .. tostring(math.random(1e6))
+    SG.Name = "PablinPanel_" .. tostring(math.random(1e6))
     SG.ZIndexBehavior = Enum.ZIndexBehavior.Global
     SG.ResetOnSpawn = false
     SG.IgnoreGuiInset = true
@@ -259,7 +150,7 @@ local function ShowKeyUI()
         }
     })
 
-    -- Círculos decorativos (vermelhos agora)
+    -- Círculos decorativos vermelhos
     New("Frame", {
         BackgroundColor3 = THEME.Accent,
         BackgroundTransparency = 0.88,
@@ -313,13 +204,15 @@ local function ShowKeyUI()
         Position = UDim2.new(0, 35, 0, 0),
         Size = UDim2.new(1, -130, 1, 0),
         Font = Enum.Font.FredokaOne,
-        Text = "Pablin Panel — Key System",
+        Text = "Pablin Panel",
         TextColor3 = Color3.fromRGB(255, 220, 220),
         TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 203,
         Parent = Header
     })
+
+    -- Badge Free
     New("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         BackgroundColor3 = THEME.SuccessBg,
@@ -336,7 +229,7 @@ local function ShowKeyUI()
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 1, 0),
                 Font = Enum.Font.GothamBold,
-                Text = "Freemium",
+                Text = "Free",
                 TextColor3 = Color3.fromRGB(130, 235, 160),
                 TextSize = 10,
                 TextXAlignment = Enum.TextXAlignment.Center,
@@ -356,7 +249,7 @@ local function ShowKeyUI()
         Parent = Header
     })
 
-    -- Linha vermelha decorativa
+    -- Linha decorativa vermelha
     New("Frame", {
         BackgroundColor3 = THEME.Accent,
         BackgroundTransparency = 0.55,
@@ -379,7 +272,7 @@ local function ShowKeyUI()
     local RX = LW + 18
     local RW = W - RX - 10
 
-    -- Divisor vertical vermelho
+    -- Divisor vertical
     New("Frame", {
         BackgroundColor3 = THEME.Accent,
         BackgroundTransparency = 0.65,
@@ -539,7 +432,7 @@ local function ShowKeyUI()
         Parent = AvatarRing,
         Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) }
     })
-    local DisplayNameLbl = New("TextLabel", {
+    New("TextLabel", {
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(0.5, 0),
         Position = UDim2.new(0.5, 0, 0, 86),
@@ -578,11 +471,7 @@ local function ShowKeyUI()
         if ok and img then AvatarImg.Image = img end
     end)
 
-    local function UpdateProfile()
-        DisplayNameLbl.TextColor3 = Color3.fromRGB(130, 220, 160)
-    end
-
-    -- Notice
+    -- Notice (substituindo o aviso de key)
     local NoticeBg = New("Frame", {
         BackgroundColor3 = THEME.BgCard,
         BackgroundTransparency = 0.22,
@@ -593,9 +482,9 @@ local function ShowKeyUI()
         Parent = Card,
         Children = {
             New("UICorner", { CornerRadius = UDim.new(0, 7) }),
-            New("UIStroke", { Color = THEME.SuccessBorder, Transparency = 0.52, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
+            New("UIStroke", { Color = THEME.AccentSoft, Transparency = 0.52, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
             New("Frame", {
-                BackgroundColor3 = THEME.SuccessBorder,
+                BackgroundColor3 = THEME.Accent,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0, 0, 0.5, -10),
                 Size = UDim2.new(0, 3, 0, 20),
@@ -609,18 +498,18 @@ local function ShowKeyUI()
         Position = UDim2.new(0, 12, 0, 0),
         Size = UDim2.new(1, -16, 1, 0),
         Font = Enum.Font.Gotham,
-        TextColor3 = Color3.fromRGB(140, 230, 170),
+        TextColor3 = Color3.fromRGB(255, 200, 200),
         TextSize = 10,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         ZIndex = 203,
-        Text = "Freemium — key is optional.\nInsert a key to unlock premium features.",
+        Text = "Welcome to Pablin Panel — Free version.\nClick 'Load Panel' to start using the hub.",
         Parent = NoticeBg
     })
 
-    -- LRM Bar
-    local LRMBar = New("Frame", {
+    -- Status Bar (substituindo o LRM bar)
+    local StatusBar = New("Frame", {
         BackgroundColor3 = THEME.BgCard,
         BackgroundTransparency = 0.22,
         BorderSizePixel = 0,
@@ -640,22 +529,22 @@ local function ShowKeyUI()
         Image = "rbxassetid://7733992528",
         ImageColor3 = THEME.Accent,
         ZIndex = 203,
-        Parent = LRMBar
+        Parent = StatusBar
     })
-    local LRMStatusLabel = New("TextLabel", {
+    New("TextLabel", {
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 25, 0, 0),
         Size = UDim2.new(1, -30, 1, 0),
         Font = Enum.Font.GothamBold,
-        Text = "Checking Luarmor...",
-        TextColor3 = Color3.fromRGB(200, 160, 160),
+        Text = "Status: Ready to load",
+        TextColor3 = THEME.Success,
         TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 203,
-        Parent = LRMBar
+        Parent = StatusBar
     })
 
-    -- Input da chave
+    -- Input (substituindo o input de key, agora é um display do usuário)
     local InputBg = New("Frame", {
         BackgroundColor3 = THEME.BgInput,
         BackgroundTransparency = 0,
@@ -678,116 +567,31 @@ local function ShowKeyUI()
         ZIndex = 203,
         Parent = InputBg
     })
-    local KeyInput = New("TextBox", {
+    New("TextLabel", {
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 30, 0, 0),
         Size = UDim2.new(1, -38, 1, 0),
         Font = Enum.Font.GothamBold,
-        PlaceholderText = "Insert premium key...",
-        PlaceholderColor3 = Color3.fromRGB(140, 80, 80),
-        Text = "",
+        Text = "User: " .. LocalPlayer.Name,
         TextColor3 = Color3.fromRGB(255, 200, 200),
         TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
-        ClearTextOnFocus = false,
         ZIndex = 203,
         Parent = InputBg
     })
+
     local StatusLabel = New("TextLabel", {
         BackgroundTransparency = 1,
         Position = UDim2.new(0, RX, 0, 185),
         Size = UDim2.new(0, RW, 0, 13),
         Font = Enum.Font.GothamBold,
-        Text = "",
-        TextColor3 = Color3.fromRGB(200, 160, 160),
+        Text = "Free version - no key required",
+        TextColor3 = THEME.Success,
         TextSize = 9,
         TextXAlignment = Enum.TextXAlignment.Center,
         ZIndex = 202,
         Parent = Card
     })
-
-    local function SetStatus(msg, col)
-        StatusLabel.Text = msg
-        StatusLabel.TextColor3 = col or Color3.fromRGB(200, 160, 160)
-    end
-
-    local function AnimateClose()
-        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
-        task.delay(0.22, function()
-            SG:Destroy()
-            done = true
-        end)
-    end
-
-    local function SubmitKey(keyStr)
-        if submitting then return end
-        keyStr = keyStr and keyStr:gsub("%s+", "") or ""
-        if keyStr == "" then
-            SetStatus("Please enter a key first.", Color3.fromRGB(255, 175, 80))
-            return
-        end
-        submitting = true
-        SetStatus("Submitting key...", Color3.fromRGB(255, 180, 180))
-        task.spawn(function()
-            local sdk, LuarmorAPI = pcall(function()
-                return loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
-            end)
-            if not sdk or type(LuarmorAPI) ~= "table" then
-                submitting = false
-                SetStatus("Failed to connect to Luarmor SDK.", THEME.Error)
-                Notify("Pablin Panel", "Unable to reach Luarmor SDK. Try again.", THEME.Error)
-                return
-            end
-            LuarmorAPI.script_id = SCRIPT_ID
-            local check, status = pcall(function()
-                return LuarmorAPI.check_key(keyStr)
-            end)
-            submitting = false
-            if not check or type(status) ~= "table" then
-                SetStatus("Verification error — try again.", THEME.Error)
-                Notify("Pablin Panel", "Verification error. Try again.", THEME.Error)
-                return
-            end
-            local code = status.code or ""
-            if code == "KEY_VALID" then
-                isPremium = true
-                resultKey = keyStr
-                SaveKey(keyStr)
-                apply_script_key(keyStr)
-                getgenv().key_expire = status.data and status.data.auth_expire or 0
-                getgenv().key_note = status.data and status.data.note or ""
-                getgenv().key_executions = status.data and status.data.total_executions or 0
-                LRMStatusLabel.Text = "Premium Active"
-                LRMStatusLabel.TextColor3 = THEME.Success
-                SetStatus("Key verified", THEME.Success)
-                UpdateProfile()
-                Notify("Key Verified", "Uses: " .. tostring(getgenv().key_executions) .. " • Expires: " .. ToTime(getgenv().key_expire), THEME.Success)
-                task.wait(0.5)
-                AnimateClose()
-            elseif code == "KEY_HWID_LOCKED" then
-                ClearKey()
-                SetStatus("HWID mismatch — reset your key.", THEME.Error)
-                Notify("Key Rejected", "HWID mismatch — reset your key on Discord.", THEME.Error)
-            elseif code == "KEY_EXPIRED" then
-                ClearKey()
-                SetStatus("Key expired — get a new one.", THEME.Error)
-                Notify("Key Rejected", "Your key has expired.", THEME.Error)
-            elseif code == "KEY_BANNED" then
-                ClearKey()
-                SetStatus("Key is banned.", THEME.Error)
-                Notify("Key Rejected", "This key is banned.", THEME.Error)
-            elseif code == "KEY_INCORRECT" then
-                ClearKey()
-                SetStatus("Key not found.", THEME.Error)
-                Notify("Key Rejected", "Key not found. Check and try again.", THEME.Error)
-            else
-                ClearKey()
-                SetStatus(tostring(status.message or ("Unknown error: " .. code)), THEME.Error)
-                Notify("Key Rejected", tostring(status.message or ("Unknown error: " .. code)), THEME.Error)
-            end
-        end)
-    end
 
     -- Botões
     local BtnY = 202
@@ -830,94 +634,34 @@ local function ShowKeyUI()
         return btn
     end
 
-    MakeBtn("Free Version", RX, BtnW, Color3.fromRGB(40, 10, 15), THEME.AccentLight, function()
-        if not Scripts.Free[gameId] then
-            SetStatus("No free version for this game.", Color3.fromRGB(255, 150, 80))
-        else
-            isPremium = false
-            AnimateClose()
-        end
+    -- Botão principal: Load Panel
+    MakeBtn("Load Panel", RX, BtnW, Color3.fromRGB(60, 15, 20), Color3.fromRGB(255, 200, 200), function()
+        StatusLabel.Text = "Loading panel..."
+        StatusLabel.TextColor3 = THEME.Warning
+        task.wait(0.5)
+        StatusLabel.Text = "Panel loaded successfully!"
+        StatusLabel.TextColor3 = THEME.Success
+        task.wait(0.8)
+        -- Fecha o card de boas vindas
+        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
+        task.delay(0.22, function() SG:Destroy() end)
+        -- Aqui você pode chamar sua função principal de farm
+        -- Exemplo: loadstring(game:HttpGet("SEU_SCRIPT_AQUI"))()
     end)
 
-    local panelOpen = false
-    local OptionPanel = New("Frame", {
-        BackgroundColor3 = THEME.BgInput,
-        BackgroundTransparency = 0,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, RX + BtnW + BtnGap, 0, BtnY - 78),
-        Size = UDim2.new(0, BtnW, 0, 72),
-        ZIndex = 215,
-        Visible = false,
-        ClipsDescendants = false,
-        Parent = Card,
-        Children = {
-            New("UICorner", { CornerRadius = UDim.new(0, 7) }),
-            New("UIStroke", {
-                Color = THEME.Accent,
-                Transparency = 0.48,
-                Thickness = 1,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            }),
-        }
-    })
-
-    local function MakeOptionBtn(label, yPos, link, statusMsg)
-        local btn = New("TextButton", {
-            BackgroundColor3 = Color3.fromRGB(50, 15, 20),
-            BackgroundTransparency = 0.30,
-            BorderSizePixel = 0,
-            Position = UDim2.new(0, 4, 0, yPos),
-            Size = UDim2.new(1, -8, 0, 30),
-            AutoButtonColor = false,
-            Text = label,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Color3.fromRGB(255, 180, 180),
-            TextSize = 11,
-            ZIndex = 216,
-            Parent = OptionPanel,
-            Children = { New("UICorner", { CornerRadius = UDim.new(0, 5) }) }
-        })
-        btn.MouseEnter:Connect(function() Tween(btn, { BackgroundTransparency = 0.08 }, 0.10) end)
-        btn.MouseLeave:Connect(function() Tween(btn, { BackgroundTransparency = 0.30 }, 0.12) end)
-        btn.MouseButton1Click:Connect(function()
-            CircleRipple(btn, Mouse.X, Mouse.Y)
-            pcall(function() (setclipboard or toclipboard)(link) end)
-            SetStatus("Copied - open in browser", THEME.Cyan)
-            task.delay(0.12, function()
-                panelOpen = false
-                OptionPanel.Visible = false
-            end)
-        end)
-        return btn
-    end
-
-    MakeOptionBtn("Lootlabs",     4,  "https://ads.luarmor.net/get_key?for=Pablin_Panel-NdUqNPMGBobv",     "Copied - open in browser")
-    MakeOptionBtn("Linkvertise",  38, "https://ads.luarmor.net/get_key?for=Pablin_Panel-KCyPvypRNlEm", "Copied - open in browser")
-
-    local getKeyBtn = MakeBtn("Get Key", RX + BtnW + BtnGap, BtnW, Color3.fromRGB(20, 35, 50), THEME.Cyan, function()
-        panelOpen = not panelOpen
-        OptionPanel.Visible = panelOpen
+    -- Botão Discord
+    MakeBtn("Discord", RX + BtnW + BtnGap, BtnW, Color3.fromRGB(20, 35, 50), THEME.Cyan, function()
+        pcall(function() (setclipboard or toclipboard)("https://discord.gg/pablin") end)
+        StatusLabel.Text = "Discord link copied!"
+        StatusLabel.TextColor3 = THEME.Cyan
     end)
 
-    UserInputService.InputBegan:Connect(function(input, processed)
-        if not panelOpen then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            local pos = input.Position
-            local ap = OptionPanel.AbsolutePosition
-            local as = OptionPanel.AbsoluteSize
-            local onPanel = pos.X >= ap.X and pos.X <= ap.X + as.X and pos.Y >= ap.Y and pos.Y <= ap.Y + as.Y
-            local gkp = getKeyBtn.AbsolutePosition
-            local gks = getKeyBtn.AbsoluteSize
-            local onBtn = pos.X >= gkp.X and pos.X <= gkp.X + gks.X and pos.Y >= gkp.Y and pos.Y <= gkp.Y + gks.Y
-            if not onPanel and not onBtn then
-                panelOpen = false
-                OptionPanel.Visible = false
-            end
-        end
-    end)
-
-    MakeBtn("Enter Key", RX + (BtnW + BtnGap) * 2, BtnW, Color3.fromRGB(60, 15, 20), Color3.fromRGB(255, 200, 200), function()
-        SubmitKey(KeyInput.Text)
+    -- Botão Close
+    MakeBtn("Close", RX + (BtnW + BtnGap) * 2, BtnW, Color3.fromRGB(40, 10, 15), THEME.AccentLight, function()
+        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
+        task.delay(0.22, function() SG:Destroy() end)
     end)
 
     -- Community section
@@ -965,75 +709,14 @@ local function ShowKeyUI()
     CloseBtn.MouseEnter:Connect(function() Tween(CloseBtn, { ImageColor3 = THEME.AccentLight }, 0.12) end)
     CloseBtn.MouseLeave:Connect(function() Tween(CloseBtn, { ImageColor3 = Color3.fromRGB(200, 80, 80) }, 0.16) end)
     CloseBtn.MouseButton1Click:Connect(function()
-        isPremium = false
-        AnimateClose()
+        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
+        task.delay(0.22, function() SG:Destroy() end)
     end)
 
     Tween(Backdrop, { BackgroundTransparency = 0.50 }, 0.28, Enum.EasingStyle.Quint)
     Tween(Card, { Size = UDim2.new(0, W, 0, H), BackgroundTransparency = 0 }, 0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-
-    task.spawn(function()
-        task.wait(1.5)
-        if LRM_IsUserPremium == true then
-            LRMStatusLabel.Text = "Premium Detected"
-            LRMStatusLabel.TextColor3 = THEME.Success
-            SetStatus("Premium key detected — click Enter Key.", Color3.fromRGB(130, 220, 160))
-        elseif LRM_IsUserFree == true then
-            LRMStatusLabel.Text = "Free User"
-            LRMStatusLabel.TextColor3 = THEME.Warning
-        else
-            LRMStatusLabel.Text = "Not Authenticated"
-            LRMStatusLabel.TextColor3 = Color3.fromRGB(200, 100, 100)
-        end
-    end)
-
-    local SavedKey = LoadSavedKey()
-    if SavedKey ~= "" then
-        KeyInput.Text = SavedKey
-        task.delay(1.0, function()
-            if not done then SubmitKey(SavedKey) end
-        end)
-    end
-
-    repeat task.wait(0.08) until done
-    return isPremium, resultKey
 end
 
--- ============================================
--- 6. AUTENTICACAO
--- ============================================
-local function AuthAndLoad()
-    local SavedKey = LoadSavedKey()
-    if SavedKey and SavedKey ~= "" then
-        local sdk, LuarmorAPI = pcall(function()
-            return loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
-        end)
-        if sdk and type(LuarmorAPI) == "table" then
-            LuarmorAPI.script_id = SCRIPT_ID
-            local check, status = pcall(function()
-                return LuarmorAPI.check_key(SavedKey)
-            end)
-            if check and type(status) == "table" and status.code == "KEY_VALID" then
-                apply_script_key(SavedKey)
-                getgenv().key_expire = status.data and status.data.auth_expire or 0
-                getgenv().key_note = status.data and status.data.note or ""
-                getgenv().key_executions = status.data and status.data.total_executions or 0
-                Notify("Welcome Back", "Uses: " .. tostring(getgenv().key_executions) .. " • Expires: " .. ToTime(getgenv().key_expire), THEME.Success)
-                LoadScript("Premium", SavedKey)
-                return
-            else
-                ClearKey()
-            end
-        end
-    end
-    task.spawn(function()
-        local premium, key = ShowKeyUI()
-        if premium then
-            LoadScript("Premium", key)
-        else
-            LoadScript("Free", nil)
-        end
-    end)
-end
-
-AuthAndLoad()
+-- Executa o painel
+BuildPanel()
